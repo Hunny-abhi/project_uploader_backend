@@ -16,7 +16,8 @@ const UserSchema = new mongoose.Schema(
     },
     email: { type: String, required: true, unique: true },
     role: { type: String, default: "user" }, // optional
-    isVerified: { type: Boolean, default: false }, // 👈 email verified?
+    isVerified: { type: Boolean, default: false }, // ✅ email verify hona zaroori
+    verificationToken: { type: String }, // ✅ token store
   },
   { timestamps: true }
 );

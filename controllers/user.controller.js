@@ -5,26 +5,71 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/SendEmail");
 
 // ==================== Register ====================
+// Register with Email Verification
 exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // check user already exists
     if (await User.findOne({ email })) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ Verification token create
+    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
     const user = new User({
       email,
       password: hashedPassword,
       avatar: req.file ? req.file.path : "",
+      verificationToken,
     });
 
     await user.save();
-    res.status(201).json({ message: "User registered successfully", user });
+
+    // ✅ Verification email bhejna
+    const verifyLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    await sendEmail(
+      email,
+      "Verify Your Email",
+      `Please verify your email by clicking this link: ${verifyLink}`
+    );
+
+    res.status(201).json({
+      message:
+        "Registration successful! Please check your email for verification link.",
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ Email Verify
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: "Token is required" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({
+      email: decoded.email,
+      verificationToken: token,
+    });
+
+    if (!user)
+      return res.status(400).json({ message: "Invalid or expired token" });
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    await user.save();
+
+    res.json({ message: "Email verified successfully! You can now login." });
+  } catch (err) {
+    res.status(500).json({ message: "Invalid or expired token" });
   }
 };
 
@@ -36,6 +81,13 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
+    // ✅ Check verification
+    if (!user.isVerified) {
+      return res
+        .status(403)
+        .json({ message: "Please verify your email first." });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
@@ -43,17 +95,14 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      {
+        expiresIn: "1h",
+      }
     );
 
     res.json({
       token,
-      user: {
-        _id: user._id,
-        email: user.email,
-        avatar: user.avatar,
-        role: user.role,
-      },
+      user: { email: user.email, avatar: user.avatar, role: user.role },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

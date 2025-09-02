@@ -5,6 +5,7 @@ const {
   login,
   forgotPassword,
   resetPassword,
+  verifyEmail,
 } = require("../controllers/user.controller");
 const { uploadAvatar } = require("../middlewares/multer.middleware");
 
@@ -18,6 +19,7 @@ router.post("/register", uploadAvatar, register);
 router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.post("/verify-email", verifyEmail);
 
 router.get("/profile", auth, async (req, res) => {
   try {
