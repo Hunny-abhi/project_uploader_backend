@@ -3,8 +3,9 @@ const Project = require("../models/project.model");
 // 🔹 Create Project
 exports.createProject = async (req, res) => {
   try {
-    if (!req.body)
+    if (!req.body) {
       return res.status(400).json({ message: "Request body is missing" });
+    }
 
     const { name, status, category, tags, description, content } = req.body;
     const { image, video, file } = req.files || {};
@@ -20,9 +21,18 @@ exports.createProject = async (req, res) => {
       description,
       content,
       createdBy: req.user.userId,
+
+      // ✅ Indian Date-Time
+      createdAtIndia: new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+      }),
+      updatedAtIndia: new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+      }),
     });
 
     await project.save();
+
     res
       .status(201)
       .json({ message: "✅ Project uploaded successfully", project });
@@ -80,12 +90,14 @@ exports.getProjectById = async (req, res) => {
 };
 
 // 🔹 Update Project (Owner or Admin)
+// 🔹 Update Project
 exports.updateProject = async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project)
       return res.status(404).json({ message: "❌ Project not found" });
 
+    // ✅ Role based access check
     if (
       req.user.role !== "admin" &&
       req.user.userId !== project.createdBy.toString()
@@ -96,6 +108,7 @@ exports.updateProject = async (req, res) => {
     const { name, status, category, tags, description, content } = req.body;
     const { image, video, file } = req.files || {};
 
+    // ✅ Update fields
     project.name = name || project.name;
     project.status = status || project.status;
     project.category = category || project.category;
@@ -111,7 +124,13 @@ exports.updateProject = async (req, res) => {
     if (video) project.video = video[0].path;
     if (file) project.file = file[0].path;
 
+    // ✅ Update Indian Time
+    project.updatedAtIndia = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+    });
+
     await project.save();
+
     res.json({ message: "✅ Project updated successfully", project });
   } catch (error) {
     res.status(500).json({ message: "❌ Error: " + error.message });

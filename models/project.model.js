@@ -19,6 +19,8 @@ const ProjectSchema = new mongoose.Schema({
   },
   ratings: [{ user: mongoose.Schema.Types.ObjectId, rating: Number }],
   comments: [{ user: mongoose.Schema.Types.ObjectId, comment: String }],
+  createdAtIndia: { type: String },
+  updatedAtIndia: { type: String },
 });
 
 module.exports = mongoose.model("Project", ProjectSchema);
