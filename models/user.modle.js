@@ -14,6 +14,9 @@ const UserSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    email: { type: String, required: true, unique: true },
+    role: { type: String, default: "user" }, // optional
+    isVerified: { type: Boolean, default: false }, // 👈 email verified?
   },
   { timestamps: true }
 );
