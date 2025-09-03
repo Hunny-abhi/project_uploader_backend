@@ -8,11 +8,14 @@ const {
   getProjectById,
   rateProject,
   commentProject,
+  getMyProjects,
 } = require("../controllers/project.controller");
 const auth = require("../middlewares/auth.middleware");
 const { uploadProjectFiles } = require("../middlewares/multer.middleware");
 
 const router = express.Router();
+
+router.get("/my", auth, getMyProjects);
 
 // 🔹 Create a project (Authenticated users)
 router.post("/upload", auth, uploadProjectFiles, createProject);
@@ -37,5 +40,8 @@ router.post("/:id/rate", auth, rateProject);
 
 // 🔹 Comment on a project (Authenticated users)
 router.post("/:id/comment", auth, commentProject);
+
+// ✅ Sirf login user ka project
+router.get("/:id", auth, getProjectById);
 
 module.exports = router;

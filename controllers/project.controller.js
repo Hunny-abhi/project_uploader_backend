@@ -192,3 +192,13 @@ exports.commentProject = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// ✅ Get only logged-in user's projects
+exports.getMyProjects = async (req, res) => {
+  try {
+    const projects = await Project.find({ createdBy: req.user.userId });
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ message: "❌ Error: " + err.message });
+  }
+};

@@ -7,10 +7,12 @@ const {
   resetPassword,
   verifyEmail,
 } = require("../controllers/user.controller");
+
 const { uploadAvatar } = require("../middlewares/multer.middleware");
+const auth = require("../middlewares/auth.middleware");
 
-const auth = require("../middlewares/auth.middleware"); // ✅ middleware for token
-
+// ❌ Wrong: "../models/user.modle"
+// ✅ Correct:
 const User = require("../models/user.modle");
 
 const router = express.Router();

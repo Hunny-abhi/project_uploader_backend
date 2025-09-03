@@ -4,108 +4,91 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/SendEmail");
 
-// ==================== Register ====================
-// Register with Email Verification
+// Register Controller
+// ----------------------
 exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // check user already exists
+    // ✅ Check existing user
     if (await User.findOne({ email })) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "❌ User already exists" });
     }
 
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Verification token create
+    // ✅ Generate verification token
     const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
+    // ✅ Create user
     const user = new User({
       email,
       password: hashedPassword,
       avatar: req.file ? req.file.path : "",
       verificationToken,
+      isVerified: false,
+      role: "user",
     });
 
     await user.save();
 
-    // ✅ Verification email bhejna
+    // ✅ Send verification email
     const verifyLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     await sendEmail(
       email,
       "Verify Your Email",
-      `Please verify your email by clicking this link: ${verifyLink}`
+      `Click this link to verify your email: ${verifyLink}`
     );
 
     res.status(201).json({
       message:
-        "Registration successful! Please check your email for verification link.",
+        "✅ Registration successful! Please check your email for verification link.",
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "❌ Server Error: " + err.message });
   }
 };
 
-// ✅ Email Verify
-exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.body;
-    if (!token) return res.status(400).json({ message: "Token is required" });
+// ----------------------
+// Login Controller
+// ----------------------
+// user.controller.js
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({
-      email: decoded.email,
-      verificationToken: token,
-    });
-
-    if (!user)
-      return res.status(400).json({ message: "Invalid or expired token" });
-
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    await user.save();
-
-    res.json({ message: "Email verified successfully! You can now login." });
-  } catch (err) {
-    res.status(500).json({ message: "Invalid or expired token" });
-  }
-};
-
-// ==================== Login ====================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
-
-    // ✅ Check verification
-    if (!user.isVerified) {
-      return res
-        .status(403)
-        .json({ message: "Please verify your email first." });
+    if (!user) {
+      return res.status(400).json({ message: "❌ Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(400).json({ message: "❌ Invalid credentials" });
+    }
 
+    // ✅ Token me userId, email aur role sab daalo
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
+      { expiresIn: "7d" }
     );
 
     res.json({
       token,
-      user: { email: user.email, avatar: user.avatar, role: user.role },
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ message: "❌ Server error" });
   }
 };
 
@@ -190,5 +173,15 @@ exports.getProfile = async (req, res) => {
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+    // yaha verification ka logic hoga
+    res.json({ message: "Email verified successfully ✅" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

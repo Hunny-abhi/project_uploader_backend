@@ -14,7 +14,7 @@ const ProjectSchema = new mongoose.Schema({
   content: { type: String },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "User", // jisse pata chale project kisne banaya
     required: true,
   },
   ratings: [{ user: mongoose.Schema.Types.ObjectId, rating: Number }],
