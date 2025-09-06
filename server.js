@@ -11,10 +11,10 @@ app.use(express.json());
 
 // ✅ Add your current frontend here
 const allowedOrigins = [
-  "http://localhost:5173",
   "https://project-uploader-frontend.vercel.app",
   "https://content-uploader-psi.vercel.app",
-  "https://content-uploader-736ti3pdt.vercel.app", // ✅ Add this line
+  "https://content-uploader-736ti3pdt.vercel.app",
+  "http://localhost:5173", // ✅ Add this line
 ];
 
 app.use(
