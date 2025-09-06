@@ -13,19 +13,23 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5173",
   "https://project-uploader-frontend.vercel.app",
-  "https://content-uploader-psi.vercel.app", // ✅ Add this
+  "https://content-uploader-psi.vercel.app",
+  "https://content-uploader-736ti3pdt.vercel.app", // ✅ Add this line
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl etc)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-        return callback(new Error(msg), false);
+      if (!origin) return callback(null, true); // allow curl, Postman, etc.
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin); // log for debugging
+        return callback(
+          new Error("CORS policy doesn't allow this origin."),
+          false
+        );
       }
-      return callback(null, true);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
