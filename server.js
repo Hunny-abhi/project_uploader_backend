@@ -11,16 +11,20 @@ app.use(express.json());
 
 // ✅ Allowed frontend origins
 const allowedOrigins = [
-  "http://localhost:5173", // local dev
-  "https://content-uploader-frontend.vercel.app", // 🆕 new frontend URL
+  "http://localhost:5173",
+  "https://content-uploader-frontend.vercel.app",
 ];
 
-// ✅ CORS middleware
+// ✅ Regex allow for all vercel preview deployments
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow curl/Postman/mobile apps
-      if (allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(new URL(origin).hostname) // allow all *.vercel.app
+      ) {
         return callback(null, true);
       } else {
         console.log("❌ Blocked by CORS:", origin);
@@ -33,8 +37,8 @@ app.use(
   })
 );
 
-// ✅ Preflight requests ke liye
-// app.options("*", cors());
+// ✅ Correct way
+app.options(/.*/, cors()); // handle all preflight
 
 // Routes
 app.use("/api/auth", require("./routes/user.route"));
