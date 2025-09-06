@@ -32,7 +32,7 @@ app.use(
 // Routes
 app.use("/api/auth", require("./routes/user.route"));
 app.use("/api/projects", require("./routes/project.route"));
-app.use("/api/uploads", express.static("uploads")); // avatar ko serve karne ke liye
+app.use("/uploads", express.static("uploads")); // avatar ko serve karne ke liye
 
 // Start Server
 const PORT = process.env.PORT || 8000;
