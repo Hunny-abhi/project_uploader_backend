@@ -26,7 +26,7 @@ router.get("/all", getAllProjects);
 // 🔹 Search projects by name (Public)
 router.get("/search", searchProjects);
 
-// 🔹 Get single project by ID (Admin Only)
+// 🔹 Get single project by ID (Authenticated / Admin, decide in controller)
 router.get("/:id", auth, getProjectById);
 
 // 🔹 Update a project (Owner/Admin)
@@ -40,8 +40,5 @@ router.post("/:id/rate", auth, rateProject);
 
 // 🔹 Comment on a project (Authenticated users)
 router.post("/:id/comment", auth, commentProject);
-
-// ✅ Sirf login user ka project
-router.get("/:id", auth, getProjectById);
 
 module.exports = router;

@@ -9,19 +9,32 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-// ✅ Add your current frontend here
+// ✅ Allowed frontend origins
 const allowedOrigins = [
-  "http://localhost:5173", // ✅ Add this line
-  "https://contentupload.vercel.app/",
+  "http://localhost:5173", // local dev
+  "https://content-uploader-frontend.vercel.app", // 🆕 new frontend URL
 ];
 
+// ✅ CORS middleware
 app.use(
   cors({
-    origin: "*",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow curl/Postman/mobile apps
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ Preflight requests ke liye
+// app.options("*", cors());
 
 // Routes
 app.use("/api/auth", require("./routes/user.route"));
